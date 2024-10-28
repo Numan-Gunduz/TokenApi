@@ -28,12 +28,12 @@ namespace TokenApi.Controllers
         {
             if (await _context.Users.AnyAsync(x => x.Username == registerModel.Username))
             {
-                return BadRequest("Username is already taken");
+                return BadRequest("Bu Kullanıcı Adına ait bir kullanıcı Zaten Var");
             }
 
             if (registerModel.Password != registerModel.PasswordConfirm)
             {
-                return BadRequest("Passwords do not match");
+                return BadRequest("Girilen Şifreler Eşleşmiyor");
             }
 
             var user = new User
@@ -45,7 +45,7 @@ namespace TokenApi.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok("User registered successfully");
+            return Ok("Kullanıcı Kaydı Başarıyla Gerçekleştirildi");
         }
 
 
@@ -56,10 +56,10 @@ namespace TokenApi.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == login.Username);
             if (user == null || !BCrypt.Net.BCrypt.Verify(login.Password, user.Password))
             {
-                return Unauthorized("Invalid credentials");
+                return Unauthorized("Geçersiz Kullanıcı Bilgileri");
             }
 
-            var token = GenerateToken(user.Username);
+            var token = TokenOlustur(user.Username);
             return Ok(new { Token = token });
         }
 
@@ -70,21 +70,21 @@ namespace TokenApi.Controllers
             var principal = GetPrincipalFromExpiredToken(expiredToken);
             if (principal == null)
             {
-                return BadRequest("Invalid token");
+                return BadRequest("Geçersiz token");
             }
 
             var username = principal.Identity?.Name;
             if (username == null)
             {
-                return BadRequest("Invalid token");
+                return BadRequest("Geçersiz token");
             }
 
-            var newToken = GenerateToken(username);
+            var newToken = TokenOlustur(username);
             return Ok(new { Token = newToken });
         }
 
         // Token Oluşturma Yardımcı Metodu
-        private string GenerateToken(string username)
+        private string TokenOlustur(string username)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
