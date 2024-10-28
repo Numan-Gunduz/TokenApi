@@ -83,7 +83,7 @@ namespace TokenApi.Controllers
             return Ok(new { Token = newToken });
         }
 
-        // Token Oluşturma Yardımcı Metodu
+        // Token Oluşturmaya yardımcı mettot
         private string TokenOlustur(string username)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
@@ -102,7 +102,7 @@ namespace TokenApi.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        // Süresi Geçmiş Token'dan Principal Elde Etme
+        // Süresi Geçmiş Token'dan bilgi alma
         private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
         {
             var tokenValidationParameters = new TokenValidationParameters
