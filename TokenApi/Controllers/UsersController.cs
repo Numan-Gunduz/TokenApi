@@ -10,7 +10,7 @@ using TokenApi.Models;
 
 namespace TokenApi.Controllers
 {
-    [Authorize]
+   
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase

@@ -9,23 +9,35 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
+builder.Services.AddHttpClient();
 
 
+// JWT Authentication settings
+var keycloakBaseUrl = builder.Configuration["Keycloak:Client:BaseUrl"];
+var keycloakRealm = builder.Configuration["Keycloak:Client:Realm"];
+var keycloakClientId = builder.Configuration["Keycloak:Client:ClientId"];
 
-// JWT Authentication Ayarlarý
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(opt =>
+builder.Services.AddAuthentication(options =>
 {
-    opt.RequireHttpsMetadata = false;
-    opt.TokenValidationParameters = new TokenValidationParameters
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.Authority = $"{keycloakBaseUrl}/realms/{keycloakRealm}";
+    options.Audience = keycloakClientId;
+    options.RequireHttpsMetadata = false;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        ClockSkew = TimeSpan.Zero,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true
+        ValidateIssuer = true,
+        ValidIssuer = $"{keycloakBaseUrl}/realms/{keycloakRealm}",
+        ValidateAudience = true,
+        ValidAudience = keycloakClientId,
+        ValidateLifetime = true
     };
 });
+
+
 builder.Services.AddAuthorization();
 
 // Add services to the container.
@@ -34,8 +46,19 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddAuthorization();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder.WithOrigins("http://localhost:3000") // Frontend URL’sini burada belirtin
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+                .AllowCredentials(); // 'withCredentials' ayarý için gereklidir
+    });
+});
+
 var app = builder.Build();
+app.UseCors(); // CORS’u etkinleþtirin
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -44,7 +67,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 

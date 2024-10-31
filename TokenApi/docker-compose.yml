@@ -1,0 +1,39 @@
+
+
+services:
+  tokenapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tokenapi-image
+    ports:
+      - "8080:8080" 
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=JwtAuthDb;Integrated Security=true;Trusted_Connection=True;TrustServerCertificate=True;
+      - Jwt_Issuer=http://keycloak:8081/realms/master
+      - Jwt_Audience=tokenapi-client
+    depends_on:
+      - keycloak
+    networks:
+      - app-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    command: ["start-dev"]
+    ports:
+      - "8081:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    networks:
+      - app-network
+
+volumes:
+  keycloak_data:
+
+networks:
+  app-network:
+    driver: bridge
