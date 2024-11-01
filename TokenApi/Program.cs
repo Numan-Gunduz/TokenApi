@@ -50,17 +50,17 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:3000") // Frontend URL’sini burada belirtin
+        builder.WithOrigins("http://localhost:3000") 
                .AllowAnyHeader()
                .AllowAnyMethod()
-                .AllowCredentials(); // 'withCredentials' ayarý için gereklidir
+                .AllowCredentials(); 
     });
 });
 
 var app = builder.Build();
-app.UseCors(); // CORS’u etkinleþtirin
+app.UseCors(); 
 
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
